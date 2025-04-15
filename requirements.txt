@@ -1,6 +1,6 @@
 streamlit
-nltk
 sentence-transformers
 scikit-learn
-numpy
+nltk
 PyMuPDF
+numpy
