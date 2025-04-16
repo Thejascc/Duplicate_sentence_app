@@ -1,17 +1,26 @@
 import streamlit as st
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-import nltk
-import nltk
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-
 import numpy as np
 import fitz  # PyMuPDF
 import os
 from nltk.tokenize import sent_tokenize
+import nltk
+import os
+
+# Specify the location of nltk data
+nltk_data_path = './nltk_data'
+
+# Add the nltk data path to the environment
+if not os.path.exists(nltk_data_path):
+    os.makedirs(nltk_data_path)
+nltk.data.path.append(nltk_data_path)
+
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', download_dir=nltk_data_path)
+
 
 # Load model
 model = SentenceTransformer('all-MiniLM-L6-v2')
