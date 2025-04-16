@@ -2,24 +2,17 @@ import streamlit as st
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
-nltk.download('punkt')
-import nltk
-nltk.download('punkt')
-
-from nltk.tokenize.punkt import PunktSentenceTokenizer, PunktParameters
-
-tokenizer = PunktSentenceTokenizer()
-sentences = tokenizer.tokenize(input_para)
-
 import numpy as np
-import fitz  
-import os
-from nltk.tokenize import sent_tokenize
+import fitz  # PyMuPDF
 
+# Download punkt only once
+nltk.download('punkt')
+
+from nltk.tokenize import sent_tokenize
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
-
+# Streamlit UI setup
 st.set_page_config(page_title="PDF Duplicate Sentence Finder", layout="wide")
 
 st.markdown("""
@@ -33,7 +26,7 @@ st.markdown("""
         }
         .stTextArea textarea {
             background-color: #ffffff !important;
-            color: #2c3e50 !important;  /* Change the text color here */
+            color: #2c3e50 !important;
             border: 2px solid #4da6ff !important;
             border-radius: 12px !important;
             padding: 15px !important;
@@ -59,10 +52,8 @@ st.markdown("<h1 style='text-align: center;'>🧠 Duplicate Sentence Finder</h1>
 st.markdown("<h5 style='text-align: center;'>Detect duplicate or similar sentences from text or PDF</h5>", unsafe_allow_html=True)
 st.markdown("---")
 
-
 st.markdown("### 📄 Upload a PDF File (Optional)")
 pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
-
 
 paragraph = ""
 if pdf_file:
@@ -71,14 +62,11 @@ if pdf_file:
             paragraph += page.get_text()
     st.success("✅ Text extracted from PDF successfully!")
 
-
 st.markdown("### ✍️ Or Paste Paragraph Below:")
 input_para = st.text_area(" ", value=paragraph.strip(), height=180)
 
-
 st.markdown("### 🎯 Select Similarity Threshold")
 threshold = st.slider("Show pairs with similarity above:", 0.5, 0.95, 0.8, 0.01)
-
 
 if st.button("🔍 Find Duplicates"):
     if input_para.strip() == "":
@@ -86,8 +74,7 @@ if st.button("🔍 Find Duplicates"):
     else:
         sentences = sent_tokenize(input_para)
 
-        
-        max_sentences = 100  
+        max_sentences = 100
         sentences = sentences[:max_sentences]
 
         embeddings = model.encode(sentences)
@@ -116,7 +103,6 @@ if st.button("🔍 Find Duplicates"):
         else:
             st.info("No similar or duplicate sentences found based on the threshold.")
 
-        
         st.markdown("### ✨ Highlighted Sentences in Paragraph")
         final_display = ""
         for idx, sent in enumerate(sentences):
