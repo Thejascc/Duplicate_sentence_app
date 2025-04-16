@@ -6,15 +6,6 @@ nltk.download('punkt')
 import numpy as np
 import fitz  
 import os
-
-# Set the nltk_data path explicitly
-nltk_data_path = os.path.join(os.getcwd(), 'nltk_data')
-nltk.data.path.append(nltk_data_path)
-
-# Download punkt tokenizer if not already available
-nltk.download('punkt', download_dir=nltk_data_path)
-
-
 from nltk.tokenize import sent_tokenize
 
 
