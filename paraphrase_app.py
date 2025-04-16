@@ -2,6 +2,12 @@ import streamlit as st
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
+import nltk
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
 import numpy as np
 import fitz  # PyMuPDF
 import os
