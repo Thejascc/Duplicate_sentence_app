@@ -4,17 +4,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 import numpy as np
 import fitz  # PyMuPDF
-
-# Download punkt only once
-nltk.download('punkt')
-
+import os
 from nltk.tokenize import sent_tokenize
 
+# Load model
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Streamlit UI setup
+# Page configuration
 st.set_page_config(page_title="PDF Duplicate Sentence Finder", layout="wide")
 
+# Custom styles
 st.markdown("""
     <style>
         body, .main {
@@ -48,10 +47,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Title
 st.markdown("<h1 style='text-align: center;'>🧠 Duplicate Sentence Finder</h1>", unsafe_allow_html=True)
 st.markdown("<h5 style='text-align: center;'>Detect duplicate or similar sentences from text or PDF</h5>", unsafe_allow_html=True)
 st.markdown("---")
 
+# Upload PDF
 st.markdown("### 📄 Upload a PDF File (Optional)")
 pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
 
@@ -62,19 +63,23 @@ if pdf_file:
             paragraph += page.get_text()
     st.success("✅ Text extracted from PDF successfully!")
 
+# Text area
 st.markdown("### ✍️ Or Paste Paragraph Below:")
 input_para = st.text_area(" ", value=paragraph.strip(), height=180)
 
+# Similarity threshold
 st.markdown("### 🎯 Select Similarity Threshold")
 threshold = st.slider("Show pairs with similarity above:", 0.5, 0.95, 0.8, 0.01)
 
+# Find duplicates button
 if st.button("🔍 Find Duplicates"):
     if input_para.strip() == "":
         st.warning("Please upload a PDF or paste some paragraph text.")
     else:
-        sentences = sent_tokenize(input_para)
+        nltk.download('punkt')  # Ensure punkt is downloaded
 
-        max_sentences = 100
+        sentences = sent_tokenize(input_para)
+        max_sentences = 100  
         sentences = sentences[:max_sentences]
 
         embeddings = model.encode(sentences)
@@ -112,5 +117,6 @@ if st.button("🔍 Find Duplicates"):
                 final_display += f"{sent} "
         st.markdown(f"<div style='font-size:17px; line-height:1.8;'>{final_display}</div>", unsafe_allow_html=True)
 
+# Footer
 st.markdown("---")
 st.markdown("<div style='text-align:center; color:#555;'>Built with ❤️ using Streamlit & Sentence Transformers</div>", unsafe_allow_html=True)
