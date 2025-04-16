@@ -5,22 +5,15 @@ import nltk
 nltk.data.path.append('./nltk_data')
 import numpy as np
 import fitz  # PyMuPDF for PDF reading
-import os
-from nltk.tokenize import sent_tokenize
-
-# Specify the location of nltk data
-nltk_data_path = './nltk_data'
-
-# Add the nltk data path to the environment
-if not os.path.exists(nltk_data_path):
-    os.makedirs(nltk_data_path)
-nltk.data.path.append(nltk_data_path)
 
 # Ensure that the punkt tokenizer is downloaded
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download('punkt', download_dir=nltk_data_path)
+    nltk.download('punkt')
+
+from nltk.tokenize import sent_tokenize
+
 
 # Load the pre-trained Sentence Transformer model
 model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -92,9 +85,10 @@ if st.button("🔍 Find Duplicates"):
     if input_para.strip() == "":
         st.warning("Please upload a PDF or paste some paragraph text.")
     else:
-        nltk.download('punkt')  # Ensure punkt is downloaded
-
         sentences = sent_tokenize(input_para)
+
+        # Debugging: Print tokenized sentences
+        st.write("Tokenized Sentences:", sentences)
 
         max_sentences = 100  # Limit to 100 sentences for performance
         sentences = sentences[:max_sentences]
