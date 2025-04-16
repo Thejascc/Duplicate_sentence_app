@@ -3,6 +3,14 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 nltk.download('punkt')
+import nltk
+nltk.download('punkt')
+
+from nltk.tokenize.punkt import PunktSentenceTokenizer, PunktParameters
+
+tokenizer = PunktSentenceTokenizer()
+sentences = tokenizer.tokenize(input_para)
+
 import numpy as np
 import fitz  
 import os
