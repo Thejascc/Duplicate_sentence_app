@@ -4,7 +4,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 nltk.data.path.append('./nltk_data')
 import numpy as np
-import fitz  # PyMuPDF for PDF reading
+import fitz 
+import torch
 
 # Ensure that the punkt tokenizer is downloaded
 try:
@@ -16,8 +17,9 @@ from nltk.tokenize import sent_tokenize
 
 
 # Load the pre-trained Sentence Transformer model
+device = torch.device('cpu')  # Force CPU usage
+model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Streamlit page configuration
 st.set_page_config(page_title="PDF Duplicate Sentence Finder", layout="wide")
