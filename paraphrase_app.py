@@ -16,8 +16,8 @@ from nltk.tokenize import sent_tokenize
 
 
 # Load the pre-trained Sentence Transformer model
-device = 'cpu'
-model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Streamlit page configuration
 st.set_page_config(page_title="PDF Duplicate Sentence Finder", layout="wide")
