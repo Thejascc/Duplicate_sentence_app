@@ -151,6 +151,23 @@ if uploaded_file is not None:
         st.download_button("📥 Download Results as CSV", csv, "sentence_similarity_results.csv", "text/csv")
     else:
         st.error("CSV must contain both 'sentence1' and 'sentence2' columns.")
+ if duplicate_pairs:
+    output_lines = []
+    for i, j, score in duplicate_pairs:
+        output_lines.append(f"Sentence 1: {sentences[i]}")
+        output_lines.append(f"Sentence 2: {sentences[j]}")
+        output_lines.append(f"Similarity Score: {score:.2f}")
+        output_lines.append("-" * 40)
+    result_text = "\n".join(output_lines)
+
+    # Download button
+    st.download_button(
+        label="📥 Download Results as TXT",
+        data=result_text,
+        file_name="duplicate_sentences.txt",
+        mime="text/plain"
+    )
+
 
 # Footer
 st.markdown("---")
