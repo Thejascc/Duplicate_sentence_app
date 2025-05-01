@@ -4,11 +4,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 nltk.data.path.append('./nltk_data')
 import numpy as np
-import fitz 
+import fitz  # PyMuPDF
 import torch
 import pandas as pd
 
-# Ensure that the punkt tokenizer is downloaded
+# Ensure punkt tokenizer is available
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -16,11 +16,11 @@ except LookupError:
 
 from nltk.tokenize import sent_tokenize
 
-# Load the pre-trained Sentence Transformer model
-device = torch.device('cpu')  # Force CPU usage
+# Load Sentence Transformer model on CPU
+device = torch.device('cpu')
 model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
 
-# Streamlit page configuration
+# Page configuration
 st.set_page_config(page_title="PDF Duplicate Sentence Finder", layout="wide")
 
 # Custom CSS styling
@@ -57,12 +57,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Display the title and description
+# App Title and Description
 st.markdown("<h1 style='text-align: center;'>🧠 Duplicate Sentence Finder</h1>", unsafe_allow_html=True)
 st.markdown("<h5 style='text-align: center;'>Detect duplicate or similar sentences from text, PDF, or CSV</h5>", unsafe_allow_html=True)
 st.markdown("---")
 
-# File uploader for PDF input
+# PDF Upload
 st.markdown("### 📄 Upload a PDF File (Optional)")
 pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
 
@@ -73,15 +73,17 @@ if pdf_file:
             paragraph += page.get_text()
     st.success("✅ Text extracted from PDF successfully!")
 
-# Text area input
+# Text Area Input
 st.markdown("### ✍️ Or Paste Paragraph Below:")
 input_para = st.text_area(" ", value=paragraph.strip(), height=180)
 
-# Slider for threshold
+# Threshold Slider
 st.markdown("### 🎯 Select Similarity Threshold")
 threshold = st.slider("Show pairs with similarity above:", 0.3, 0.95, 0.8, 0.01)
 
-# Button to trigger duplicate detection
+duplicate_pairs = []
+
+# Find Duplicates Button
 if st.button("🔍 Find Duplicates"):
     if input_para.strip() == "":
         st.warning("Please upload a PDF or paste some paragraph text.")
@@ -93,7 +95,6 @@ if st.button("🔍 Find Duplicates"):
         sentences = sentences[:max_sentences]
         embeddings = model.encode(sentences)
 
-        duplicate_pairs = []
         highlighted = set()
 
         for i in range(len(sentences)):
@@ -128,7 +129,24 @@ if st.button("🔍 Find Duplicates"):
                 final_display += f"{sent} "
         st.markdown(f"<div style='font-size:17px; line-height:1.8;'>{final_display}</div>", unsafe_allow_html=True)
 
-# CSV batch input
+        # Download results as TXT
+        if duplicate_pairs:
+            output_lines = []
+            for i, j, score in duplicate_pairs:
+                output_lines.append(f"Sentence 1: {sentences[i]}")
+                output_lines.append(f"Sentence 2: {sentences[j]}")
+                output_lines.append(f"Similarity Score: {score:.2f}")
+                output_lines.append("-" * 40)
+            result_text = "\n".join(output_lines)
+
+            st.download_button(
+                label="📥 Download Results as TXT",
+                data=result_text,
+                file_name="duplicate_sentences.txt",
+                mime="text/plain"
+            )
+
+# CSV Upload Section
 st.markdown("---")
 st.markdown("### 📊 Or Upload a CSV File with Sentence Pairs")
 uploaded_file = st.file_uploader("Upload CSV with 'sentence1' and 'sentence2' columns", type=["csv"])
@@ -151,26 +169,6 @@ if uploaded_file is not None:
         st.download_button("📥 Download Results as CSV", csv, "sentence_similarity_results.csv", "text/csv")
     else:
         st.error("CSV must contain both 'sentence1' and 'sentence2' columns.")
-            # Download results as TXT
-            # Download results as TXT
-        if duplicate_pairs:
-            output_lines = []
-            for i, j, score in duplicate_pairs:
-                output_lines.append(f"Sentence 1: {sentences[i]}")
-                output_lines.append(f"Sentence 2: {sentences[j]}")
-                output_lines.append(f"Similarity Score: {score:.2f}")
-                output_lines.append("-" * 40)
-            result_text = "\n".join(output_lines)
-
-            st.download_button(
-                label="📥 Download Results as TXT",
-                data=result_text,
-                file_name="duplicate_sentences.txt",
-                mime="text/plain"
-            )
-
-         
-
 
 # Footer
 st.markdown("---")
