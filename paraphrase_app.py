@@ -6,6 +6,7 @@ nltk.data.path.append('./nltk_data')
 import numpy as np
 import fitz 
 import torch
+import pandas as pd
 
 # Ensure that the punkt tokenizer is downloaded
 try:
@@ -15,11 +16,9 @@ except LookupError:
 
 from nltk.tokenize import sent_tokenize
 
-
 # Load the pre-trained Sentence Transformer model
 device = torch.device('cpu')  # Force CPU usage
 model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
-
 
 # Streamlit page configuration
 st.set_page_config(page_title="PDF Duplicate Sentence Finder", layout="wide")
@@ -60,7 +59,7 @@ st.markdown("""
 
 # Display the title and description
 st.markdown("<h1 style='text-align: center;'>🧠 Duplicate Sentence Finder</h1>", unsafe_allow_html=True)
-st.markdown("<h5 style='text-align: center;'>Detect duplicate or similar sentences from text or PDF</h5>", unsafe_allow_html=True)
+st.markdown("<h5 style='text-align: center;'>Detect duplicate or similar sentences from text, PDF, or CSV</h5>", unsafe_allow_html=True)
 st.markdown("---")
 
 # File uploader for PDF input
@@ -69,40 +68,34 @@ pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
 
 paragraph = ""
 if pdf_file:
-    # Extract text from the uploaded PDF
     with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
         for page in doc:
             paragraph += page.get_text()
     st.success("✅ Text extracted from PDF successfully!")
 
-# Text area for the user to paste a paragraph
+# Text area input
 st.markdown("### ✍️ Or Paste Paragraph Below:")
 input_para = st.text_area(" ", value=paragraph.strip(), height=180)
 
-# Slider to adjust the similarity threshold
+# Slider for threshold
 st.markdown("### 🎯 Select Similarity Threshold")
 threshold = st.slider("Show pairs with similarity above:", 0.3, 0.95, 0.8, 0.01)
 
-# Button to trigger the duplicate sentence finding
+# Button to trigger duplicate detection
 if st.button("🔍 Find Duplicates"):
     if input_para.strip() == "":
         st.warning("Please upload a PDF or paste some paragraph text.")
     else:
         sentences = sent_tokenize(input_para)
-
-        # Debugging: Print tokenized sentences
         st.write("Tokenized Sentences:", sentences)
 
-        max_sentences = 100  # Limit to 100 sentences for performance
+        max_sentences = 100
         sentences = sentences[:max_sentences]
-
-        # Generate embeddings for sentences
         embeddings = model.encode(sentences)
 
         duplicate_pairs = []
         highlighted = set()
 
-        # Calculate cosine similarity between all pairs of sentences
         for i in range(len(sentences)):
             for j in range(i + 1, len(sentences)):
                 score = cosine_similarity([embeddings[i]], [embeddings[j]])[0][0]
@@ -112,7 +105,6 @@ if st.button("🔍 Find Duplicates"):
                     highlighted.add(i)
                     highlighted.add(j)
 
-        # Display results
         st.markdown("## 🔎 Results")
         if duplicate_pairs:
             st.success("✅ Duplicate Sentence Pairs Detected:")
@@ -127,7 +119,6 @@ if st.button("🔍 Find Duplicates"):
         else:
             st.info("No similar or duplicate sentences found based on the threshold.")
 
-        # Highlight the duplicate sentences in the input paragraph
         st.markdown("### ✨ Highlighted Sentences in Paragraph")
         final_display = ""
         for idx, sent in enumerate(sentences):
@@ -137,6 +128,30 @@ if st.button("🔍 Find Duplicates"):
                 final_display += f"{sent} "
         st.markdown(f"<div style='font-size:17px; line-height:1.8;'>{final_display}</div>", unsafe_allow_html=True)
 
-# Footer for the app
+# CSV batch input
+st.markdown("---")
+st.markdown("### 📊 Or Upload a CSV File with Sentence Pairs")
+uploaded_file = st.file_uploader("Upload CSV with 'sentence1' and 'sentence2' columns", type=["csv"])
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    if 'sentence1' in df.columns and 'sentence2' in df.columns:
+        with st.spinner("Generating similarity scores..."):
+            embeddings1 = model.encode(df['sentence1'].tolist(), device='cpu')
+            embeddings2 = model.encode(df['sentence2'].tolist(), device='cpu')
+            scores = [cosine_similarity([e1], [e2])[0][0] for e1, e2 in zip(embeddings1, embeddings2)]
+
+        df['similarity_score'] = scores
+        df['label'] = df['similarity_score'].apply(lambda x: "Duplicate" if x >= threshold else "Not Duplicate")
+
+        st.success("✅ Similarity computed for all sentence pairs!")
+        st.dataframe(df[['sentence1', 'sentence2', 'similarity_score', 'label']])
+
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Download Results as CSV", csv, "sentence_similarity_results.csv", "text/csv")
+    else:
+        st.error("CSV must contain both 'sentence1' and 'sentence2' columns.")
+
+# Footer
 st.markdown("---")
 st.markdown("<div style='text-align:center; color:#555;'>Built with ❤️ using Streamlit & Sentence Transformers</div>", unsafe_allow_html=True)
