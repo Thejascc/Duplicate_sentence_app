@@ -2,17 +2,21 @@ import streamlit as st
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
-nltk.data.path.append('./nltk_data')
+import os
 import numpy as np
 import fitz  # PyMuPDF
 import torch
 import pandas as pd
 
-# Ensure punkt tokenizer is available
+# ==== FIXED: Ensure punkt tokenizer is available safely ====
+nltk_data_dir = "./nltk_data"
+os.makedirs(nltk_data_dir, exist_ok=True)
+nltk.data.path.append(nltk_data_dir)
+
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download('punkt')
+    nltk.download('punkt', download_dir=nltk_data_dir)
 
 from nltk.tokenize import sent_tokenize
 
